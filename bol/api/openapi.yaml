@@ -1,0 +1,3029 @@
+openapi: 3.0.3
+info:
+  contact:
+    email: info@dcsa.org
+    name: Digital Container Shipping Association (DCSA)
+    url: https://dcsa.org
+  description: |
+    API specification issued by DCSA.org.
+
+    For explanation to specific values or objects please refer to the <a href='https://dcsa.org/wp-content/uploads/2020/12/20201208-DCSA-P1-DCSA-Information-Model-v3.0-FINAL.pdf'>Information Model v3.0</a>
+
+    It is possible to use this API as a standalone API. In order to do so it is necessary to use the poll-endPoint
+    - /v1/events
+
+    in order to poll event information.
+
+    It is recomended to implement the <a href='https://app.swaggerhub.com/apis/dcsaorg/DOCUMENTATION_EVENT_HUB'>DCSA Documentation Event Hub</a> in order to use the push model. Here events are pushed as they occur.
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  title: DCSA OpenAPI specification for Electronic Bill of Lading
+  version: 1.0.0
+servers:
+- url: /
+tags:
+- name: Shipping Instructions
+- name: Transport Documents
+- name: Events
+paths:
+  /v1/shipping-instructions-summaries:
+    get:
+      description: Retrieves the shipping instruction &apos;metadata&apos; with the
+        ID in the path.
+      parameters:
+      - description: |
+          A set of unique characters provided by carrier to identify a booking.
+
+          Specifying this filter will only return events related to this particular carrierBookingReference.
+        explode: true
+        in: query
+        name: carrierBookingReference
+        required: false
+        schema:
+          $ref: '#/components/schemas/carrierBookingReference'
+        style: form
+      - description: |
+          Filter by the status of the document in the process. Possible values are:
+          - RECE (Received)
+          - DRFT (Drafted)
+          - PENA (Pending Approval)
+          - PENU (Pending Update)
+          - REJE (Rejected)
+          - APPR (Approved)
+          - ISSU (Issued)
+          - SURR (Surrendered)
+          - SUBM (Submitted)
+          - VOID (Void)
+        explode: true
+        in: query
+        name: documentStatus
+        required: false
+        schema:
+          $ref: '#/components/schemas/documentStatus'
+        style: form
+      - description: |
+          Filter by the unique identifier for the equipment, which should follow the BIC ISO Container Identification Number where possible.
+          According to ISO 6346, a container identification code consists of a 4-letter prefix and a 7-digit number (composed of a 3-letter owner code, a category identifier, a serial number, and a check-digit). If a container does not comply with ISO 6346, it is suggested to follow Recommendation #2 “Container with non-ISO identification” from SMDG.
+        explode: true
+        in: query
+        name: equipmentReference
+        required: false
+        schema:
+          $ref: '#/components/schemas/equipmentReference'
+        style: form
+      - description: Maximum number of items to return.
+        example: 100
+        explode: true
+        in: query
+        name: limit
+        required: false
+        schema:
+          default: 100
+          format: int32
+          minimum: 1
+          type: integer
+        style: form
+      - description: "A server generated value to specify a specific point in a collection\
+          \ result, used for pagination."
+        example: fE9mZnNldHw9MTAmbGltaXQ9MTA=
+        explode: true
+        in: query
+        name: cursor
+        required: false
+        schema:
+          type: string
+        style: form
+      - description: An API-Version header MAY be added to the request (optional);
+          if added it MUST only contain MAJOR version. API-Version header MUST be
+          aligned with the URI version.
+        explode: false
+        in: header
+        name: API-Version
+        required: false
+        schema:
+          example: "1"
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/shippingInstructionHeader'
+                type: array
+          description: Request successful
+          headers:
+            API-Version:
+              $ref: '#/components/headers/API-Version'
+            Current-Page:
+              $ref: '#/components/headers/Current-Page'
+            Next-Page:
+              $ref: '#/components/headers/Next-Page'
+            Prev-Page:
+              $ref: '#/components/headers/Prev-Page'
+            Last-Page:
+              $ref: '#/components/headers/Last-Page'
+            First-Page:
+              $ref: '#/components/headers/First-Page'
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+          description: Unexpected error
+          headers:
+            API-Version:
+              $ref: '#/components/headers/API-Version'
+      summary: Get shipping instruction
+      tags:
+      - Shipping Instructions
+  /v1/shipping-instructions:
+    post:
+      description: |
+        Creates a new shipping instruction
+      parameters:
+      - description: An API-Version header MAY be added to the request (optional);
+          if added it MUST only contain MAJOR version. API-Version header MUST be
+          aligned with the URI version.
+        explode: false
+        in: header
+        name: API-Version
+        required: false
+        schema:
+          example: "1"
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/shippingInstructionNoID'
+        description: Parameters used to create the shipping instruction
+        required: true
+      responses:
+        "202":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/shippingInstruction'
+          description: Shipping Instruction accepted
+          headers:
+            API-Version:
+              $ref: '#/components/headers/API-Version'
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+          description: Unexpected error
+          headers:
+            API-Version:
+              $ref: '#/components/headers/API-Version'
+      summary: Post shipping instruction
+      tags:
+      - Shipping Instructions
+  /v1/shipping-instructions/{shippingInstructionID}:
+    get:
+      description: Retrieves the shipping instruction with the ID in the path.
+      parameters:
+      - explode: false
+        in: path
+        name: shippingInstructionID
+        required: true
+        schema:
+          $ref: '#/components/schemas/shippingInstructionID'
+        style: simple
+      - description: An API-Version header MAY be added to the request (optional);
+          if added it MUST only contain MAJOR version. API-Version header MUST be
+          aligned with the URI version.
+        explode: false
+        in: header
+        name: API-Version
+        required: false
+        schema:
+          example: "1"
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/shippingInstruction'
+          description: Request successful
+          headers:
+            API-Version:
+              $ref: '#/components/headers/API-Version'
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+          description: Unexpected error
+          headers:
+            API-Version:
+              $ref: '#/components/headers/API-Version'
+      summary: Get shipping instruction
+      tags:
+      - Shipping Instructions
+    put:
+      description: |
+        Updates a shipping instruction
+      parameters:
+      - explode: false
+        in: path
+        name: shippingInstructionID
+        required: true
+        schema:
+          $ref: '#/components/schemas/shippingInstructionID'
+        style: simple
+      - description: An API-Version header MAY be added to the request (optional);
+          if added it MUST only contain MAJOR version. API-Version header MUST be
+          aligned with the URI version.
+        explode: false
+        in: header
+        name: API-Version
+        required: false
+        schema:
+          example: "1"
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/shippingInstruction'
+        description: Parameters used to update the shipping instruction
+        required: true
+      responses:
+        "202":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/shippingInstruction'
+          description: Shipping Instruction accepted
+          headers:
+            API-Version:
+              $ref: '#/components/headers/API-Version'
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+          description: Unexpected error
+          headers:
+            API-Version:
+              $ref: '#/components/headers/API-Version'
+      summary: Put shipping instruction
+      tags:
+      - Shipping Instructions
+  /v1/transport-documents-summaries:
+    get:
+      description: Retrieves all Transport Documents
+      parameters:
+      - description: Maximum number of items to return.
+        example: 100
+        explode: true
+        in: query
+        name: limit
+        required: false
+        schema:
+          default: 100
+          format: int32
+          minimum: 1
+          type: integer
+        style: form
+      - description: "A server generated value to specify a specific point in a collection\
+          \ result, used for pagination."
+        example: fE9mZnNldHw9MTAmbGltaXQ9MTA=
+        explode: true
+        in: query
+        name: cursor
+        required: false
+        schema:
+          type: string
+        style: form
+      - description: |
+          A set of unique characters provided by carrier to identify a booking.
+
+          Specifying this filter will only return events related to this particular carrierBookingReference.
+        explode: true
+        in: query
+        name: carrierBookingReference
+        required: false
+        schema:
+          $ref: '#/components/schemas/carrierBookingReference'
+        style: form
+      - description: |
+          Filter by the status of the document in the process. Possible values are:
+          - RECE (Received)
+          - DRFT (Drafted)
+          - PENA (Pending Approval)
+          - PENU (Pending Update)
+          - REJE (Rejected)
+          - APPR (Approved)
+          - ISSU (Issued)
+          - SURR (Surrendered)
+          - SUBM (Submitted)
+          - VOID (Void)
+        explode: true
+        in: query
+        name: documentStatus
+        required: false
+        schema:
+          $ref: '#/components/schemas/documentStatus'
+        style: form
+      - description: |
+          Filter by the unique identifier for the equipment, which should follow the BIC ISO Container Identification Number where possible.
+          According to ISO 6346, a container identification code consists of a 4-letter prefix and a 7-digit number (composed of a 3-letter owner code, a category identifier, a serial number, and a check-digit). If a container does not comply with ISO 6346, it is suggested to follow Recommendation #2 “Container with non-ISO identification” from SMDG.
+        explode: true
+        in: query
+        name: equipmentReference
+        required: false
+        schema:
+          $ref: '#/components/schemas/equipmentReference'
+        style: form
+      - description: An API-Version header MAY be added to the request (optional);
+          if added it MUST only contain MAJOR version. API-Version header MUST be
+          aligned with the URI version.
+        explode: false
+        in: header
+        name: API-Version
+        required: false
+        schema:
+          example: "1"
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/transportDocumentHeader'
+                type: array
+          description: Request successful
+          headers:
+            API-Version:
+              $ref: '#/components/headers/API-Version'
+            Current-Page:
+              $ref: '#/components/headers/Current-Page'
+            Next-Page:
+              $ref: '#/components/headers/Next-Page'
+            Prev-Page:
+              $ref: '#/components/headers/Prev-Page'
+            Last-Page:
+              $ref: '#/components/headers/Last-Page'
+            First-Page:
+              $ref: '#/components/headers/First-Page'
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+          description: Unexpected error
+          headers:
+            API-Version:
+              $ref: '#/components/headers/API-Version'
+      summary: Get Transport Documents
+      tags:
+      - Transport Documents
+  /v1/transport-documents/{transportDocumentReference}:
+    get:
+      description: Retrieves the transport document with the transportDocumentReference
+        in the path.
+      parameters:
+      - description: The transportDocumentReference of the transportDocument
+        explode: false
+        in: path
+        name: transportDocumentReference
+        required: true
+        schema:
+          $ref: '#/components/schemas/transportDocumentReference'
+        style: simple
+      - description: An API-Version header MAY be added to the request (optional);
+          if added it MUST only contain MAJOR version. API-Version header MUST be
+          aligned with the URI version.
+        explode: false
+        in: header
+        name: API-Version
+        required: false
+        schema:
+          example: "1"
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/transportDocument'
+          description: Request successful
+          headers:
+            API-Version:
+              $ref: '#/components/headers/API-Version'
+            Document-Signature:
+              description: The Carrier signature of the Transport Document
+              explode: false
+              schema:
+                type: string
+              style: simple
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+          description: Unexpected error
+          headers:
+            API-Version:
+              $ref: '#/components/headers/API-Version'
+      summary: Get Transport Document
+      tags:
+      - Transport Documents
+  /v1/transport-documents/{transportDocumentReference}/approvals:
+    post:
+      description: |
+        Approves a Transport Document.
+      parameters:
+      - description: The transportDocumentReference of the transportDocument
+        explode: false
+        in: path
+        name: transportDocumentReference
+        required: true
+        schema:
+          $ref: '#/components/schemas/transportDocumentReference'
+        style: simple
+      - description: The signature of the Transport Document to approve
+        explode: true
+        in: query
+        name: documentSignature
+        required: true
+        schema:
+          type: string
+        style: form
+      - description: An API-Version header MAY be added to the request (optional);
+          if added it MUST only contain MAJOR version. API-Version header MUST be
+          aligned with the URI version.
+        explode: false
+        in: header
+        name: API-Version
+        required: false
+        schema:
+          example: "1"
+          type: string
+        style: simple
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/transportDocument'
+          description: The Transport Document
+          headers:
+            API-Version:
+              $ref: '#/components/headers/API-Version'
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+          description: Unexpected error
+          headers:
+            API-Version:
+              $ref: '#/components/headers/API-Version'
+      summary: Approve a Transport Document.
+      tags:
+      - Transport Documents
+  /v1/events/:
+    get:
+      description: |
+        Retrieves Shipment events. The default sort order is by <i>eventCreatedDateTime</i> in descending order (DESC)
+      parameters:
+      - description: |
+          The status of the document in the process to filter by. Possible values are
+          - RECE (Received)
+          - DRFT (Drafted)
+          - PENA (Pending Approval)
+          - PENU (Pending Update)
+          - REJE (Rejected)
+          - APPR (Approved)
+          - ISSU (Issued)
+          - SURR (Surrendered)
+          - SUBM (Submitted)
+          - VOID (Void)
+          - CONF (Confirmed)
+
+          It is possible to select multiple values by comma (,) separating them. For multiple values the OR-operator is used. For example <i>shipmentEventTypeCode=RECE,DRFT</i>  Matches <b>both</b> Received (RECE) and Drafted (DRFT) shipment events.
+
+          Default is all shipmentEventTypeCodes.
+
+          This filter is only relevant when filtering on ShipmentEvents
+        example: "RECE,DRFT"
+        explode: false
+        in: query
+        name: shipmentEventTypeCode
+        required: false
+        schema:
+          items:
+            $ref: '#/components/schemas/shipmentEventTypeCode'
+          type: array
+        style: form
+      - description: |
+          A set of unique characters provided by carrier to identify a booking.
+
+          Specifying this filter will only return events related to this particular carrierBookingReference.
+        explode: true
+        in: query
+        name: carrierBookingReference
+        required: false
+        schema:
+          $ref: '#/components/schemas/carrierBookingReference'
+        style: form
+      - description: The transportDocumentReference of the transportDocument
+        explode: false
+        in: path
+        name: transportDocumentReference
+        required: true
+        schema:
+          $ref: '#/components/schemas/transportDocumentReference'
+        style: simple
+      - description: |
+          Specifies the type of the transport document (a Bill of Lading (BOL) or a Sea Waybill (SWB)) to filter by.
+
+          Default is both.
+        example: SWB
+        explode: false
+        in: query
+        name: transportDocumentTypeCode
+        required: false
+        schema:
+          items:
+            $ref: '#/components/schemas/transportDocumentType'
+          type: array
+        style: form
+      - description: Maximum number of items to return.
+        example: 100
+        explode: true
+        in: query
+        name: limit
+        required: false
+        schema:
+          default: 100
+          format: int32
+          minimum: 1
+          type: integer
+        style: form
+      - description: "A server generated value to specify a specific point in a collection\
+          \ result, used for pagination."
+        example: fE9mZnNldHw9MTAmbGltaXQ9MTA=
+        explode: true
+        in: query
+        name: cursor
+        required: false
+        schema:
+          type: string
+        style: form
+      - description: An API-Version header MAY be added to the request (optional);
+          if added it MUST only contain MAJOR version. API-Version header MUST be
+          aligned with the URI version.
+        explode: false
+        in: header
+        name: API-Version
+        required: false
+        schema:
+          example: "1"
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/shipmentEvent'
+                type: array
+          description: Request successful
+          headers:
+            API-Version:
+              $ref: '#/components/headers/API-Version'
+            Current-Page:
+              $ref: '#/components/headers/Current-Page'
+            Next-Page:
+              $ref: '#/components/headers/Next-Page'
+            Prev-Page:
+              $ref: '#/components/headers/Prev-Page'
+            Last-Page:
+              $ref: '#/components/headers/Last-Page'
+            First-Page:
+              $ref: '#/components/headers/First-Page'
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+          description: Unexpected error
+          headers:
+            API-Version:
+              $ref: '#/components/headers/API-Version'
+      summary: Get Shipment events
+      tags:
+      - Events
+components:
+  headers:
+    API-Version:
+      description: SemVer used to indicate the version of the contract (API version)
+        returned.
+      explode: false
+      schema:
+        example: 1.0.0
+        type: string
+      style: simple
+    Current-Page:
+      description: A link to the current page.
+      explode: false
+      required: true
+      schema:
+        example: fE9mZnNldHw9MCZsaW1pdD01
+        type: string
+      style: simple
+    Next-Page:
+      description: A link to the next page. Next-Page header link MAY be omitted if
+        the current page is the last page.
+      explode: false
+      required: false
+      schema:
+        example: fE9mZnNldHw9NSZsaW1pdD01
+        type: string
+      style: simple
+    Prev-Page:
+      description: A link to the previous page. Previous-Page header link MAY be omitted
+        if the current page is the first page.
+      explode: false
+      required: false
+      schema:
+        example: fE9mZnNldHw9MCZsaW1pdD01
+        type: string
+      style: simple
+    Last-Page:
+      description: A link to the last page. Last-Page header link MAY be omitted if
+        the current page is the last page.
+      explode: false
+      required: false
+      schema:
+        example: fE9mZnNldHw9NTkmbGltaXQ9NQ==
+        type: string
+      style: simple
+    First-Page:
+      description: A link to thefirst page. First-Page header link MAY be omitted
+        if current page is the first page.
+      explode: false
+      required: false
+      schema:
+        example: fE9mZnNldHw9NjAmbGltaXQ9NQ==
+        type: string
+      style: simple
+  parameters:
+    shippingInstructionID:
+      explode: false
+      in: path
+      name: shippingInstructionID
+      required: true
+      schema:
+        $ref: '#/components/schemas/shippingInstructionID'
+      style: simple
+    transportDocumentReference:
+      description: The transportDocumentReference of the transportDocument
+      explode: false
+      in: path
+      name: transportDocumentReference
+      required: true
+      schema:
+        $ref: '#/components/schemas/transportDocumentReference'
+      style: simple
+    documentStatus:
+      description: |
+        Filter by the status of the document in the process. Possible values are:
+        - RECE (Received)
+        - DRFT (Drafted)
+        - PENA (Pending Approval)
+        - PENU (Pending Update)
+        - REJE (Rejected)
+        - APPR (Approved)
+        - ISSU (Issued)
+        - SURR (Surrendered)
+        - SUBM (Submitted)
+        - VOID (Void)
+      explode: true
+      in: query
+      name: documentStatus
+      required: false
+      schema:
+        $ref: '#/components/schemas/documentStatus'
+      style: form
+    equipmentReference:
+      description: |
+        Filter by the unique identifier for the equipment, which should follow the BIC ISO Container Identification Number where possible.
+        According to ISO 6346, a container identification code consists of a 4-letter prefix and a 7-digit number (composed of a 3-letter owner code, a category identifier, a serial number, and a check-digit). If a container does not comply with ISO 6346, it is suggested to follow Recommendation #2 “Container with non-ISO identification” from SMDG.
+      explode: true
+      in: query
+      name: equipmentReference
+      required: false
+      schema:
+        $ref: '#/components/schemas/equipmentReference'
+      style: form
+    documentSignature:
+      description: The signature of the Transport Document to approve
+      explode: true
+      in: query
+      name: documentSignature
+      required: true
+      schema:
+        type: string
+      style: form
+    carrierBookingReference:
+      description: |
+        A set of unique characters provided by carrier to identify a booking.
+
+        Specifying this filter will only return events related to this particular carrierBookingReference.
+      explode: true
+      in: query
+      name: carrierBookingReference
+      required: false
+      schema:
+        $ref: '#/components/schemas/carrierBookingReference'
+      style: form
+    limit:
+      description: Maximum number of items to return.
+      example: 100
+      explode: true
+      in: query
+      name: limit
+      required: false
+      schema:
+        default: 100
+        format: int32
+        minimum: 1
+        type: integer
+      style: form
+    cursor:
+      description: "A server generated value to specify a specific point in a collection\
+        \ result, used for pagination."
+      example: fE9mZnNldHw9MTAmbGltaXQ9MTA=
+      explode: true
+      in: query
+      name: cursor
+      required: false
+      schema:
+        type: string
+      style: form
+    Api-Version-Major:
+      description: An API-Version header MAY be added to the request (optional); if
+        added it MUST only contain MAJOR version. API-Version header MUST be aligned
+        with the URI version.
+      explode: false
+      in: header
+      name: API-Version
+      required: false
+      schema:
+        example: "1"
+        type: string
+      style: simple
+    shipmentEventTypeCode:
+      description: |
+        The status of the document in the process to filter by. Possible values are
+        - RECE (Received)
+        - DRFT (Drafted)
+        - PENA (Pending Approval)
+        - PENU (Pending Update)
+        - REJE (Rejected)
+        - APPR (Approved)
+        - ISSU (Issued)
+        - SURR (Surrendered)
+        - SUBM (Submitted)
+        - VOID (Void)
+        - CONF (Confirmed)
+
+        It is possible to select multiple values by comma (,) separating them. For multiple values the OR-operator is used. For example <i>shipmentEventTypeCode=RECE,DRFT</i>  Matches <b>both</b> Received (RECE) and Drafted (DRFT) shipment events.
+
+        Default is all shipmentEventTypeCodes.
+
+        This filter is only relevant when filtering on ShipmentEvents
+      example: "RECE,DRFT"
+      explode: false
+      in: query
+      name: shipmentEventTypeCode
+      required: false
+      schema:
+        items:
+          $ref: '#/components/schemas/shipmentEventTypeCode'
+        type: array
+      style: form
+    transportDocumentTypeCode:
+      description: |
+        Specifies the type of the transport document (a Bill of Lading (BOL) or a Sea Waybill (SWB)) to filter by.
+
+        Default is both.
+      example: SWB
+      explode: false
+      in: query
+      name: transportDocumentTypeCode
+      required: false
+      schema:
+        items:
+          $ref: '#/components/schemas/transportDocumentType'
+        type: array
+      style: form
+  schemas:
+    carrierBookingReference:
+      description: A set of unique characters provided by carrier to identify a booking.
+      example: ABC709951
+      maxLength: 35
+      type: string
+    documentStatus:
+      description: |
+        The status of the document in the process. Possible values are:
+        - RECE (Received)
+        - DRFT (Drafted)
+        - PENA (Pending Approval)
+        - PENU (Pending Update)
+        - REJE (Rejected)
+        - APPR (Approved)
+        - ISSU (Issued)
+        - SURR (Surrendered)
+        - SUBM (Submitted)
+        - VOID (Void)
+      enum:
+      - RECE
+      - DRFT
+      - PENA
+      - PENU
+      - REJE
+      - APPR
+      - ISSU
+      - SURR
+      - SUBM
+      - VOID
+      example: DRFT
+      type: string
+    equipmentReference:
+      description: |
+        The unique identifier for the equipment, which should follow the BIC ISO Container Identification Number where possible.
+        According to ISO 6346, a container identification code consists of a 4-letter prefix and a 7-digit number (composed of a 3-letter owner code, a category identifier, a serial number, and a check-digit). If a container does not comply with ISO 6346, it is suggested to follow Recommendation #2 “Container with non-ISO identification” from SMDG.
+      example: APZU4812090
+      maxLength: 15
+      type: string
+    shippingInstructionHeader:
+      allOf:
+      - $ref: '#/components/schemas/shippingInstructionHeader_allOf'
+      - $ref: '#/components/schemas/shippingInstructionHeaderNoID'
+      description: "an enrichment to the original booking shared by the shipper to\
+        \ the carrier. The shipping instruction includes volume or weight, cargo items,\
+        \ shipping dates, origin, destination, and other special instructions. The\
+        \ information given by the shipper through the shipping instruction is the\
+        \ information required to create a Transport Document."
+      required:
+      - shippingInstructionID
+      type: object
+    shippingInstructionID:
+      description: |
+        The identifier for a shipping instruction provided by the carrier for system purposes.
+      example: e0559d83-00e2-438e-afd9-fdd610c1a008
+      maxLength: 100
+      type: string
+    shippingInstructionHeaderNoID:
+      allOf:
+      - $ref: '#/components/schemas/shippingInstructionHeaderNoID_allOf'
+      - $ref: '#/components/schemas/shippingInstructionHeaderNoID_allOf_1'
+      - $ref: '#/components/schemas/shippingInstructionHeaderNoID_allOf_2'
+      - $ref: '#/components/schemas/shippingInstructionHeaderNoID_allOf_3'
+      - $ref: '#/components/schemas/shippingInstructionHeaderNoID_allOf_4'
+      - $ref: '#/components/schemas/shippingInstructionHeaderNoID_allOf_5'
+      - $ref: '#/components/schemas/shippingInstructionHeaderNoID_allOf_6'
+      - $ref: '#/components/schemas/shippingInstructionHeaderNoID_allOf_7'
+      - $ref: '#/components/schemas/shippingInstructionHeaderNoID_allOf_8'
+      - $ref: '#/components/schemas/shippingInstructionHeaderNoID_allOf_9'
+      - $ref: '#/components/schemas/shippingInstructionHeaderNoID_allOf_10'
+      description: "an enrichment to the original booking shared by the shipper to\
+        \ the carrier. The shipping instruction includes volume or weight, cargo items,\
+        \ shipping dates, origin, destination, and other special instructions. The\
+        \ information given by the shipper through the shipping instruction is the\
+        \ information required to create a Transport Document."
+      required:
+      - invoicePayableAt
+      - isElectronic
+      - isShippedOnboardType
+      - transportDocumentType
+      type: object
+    transportDocumentType:
+      description: Specifies the type of the transport document (a Bill of Lading
+        (BOL) or a Sea Waybill (SWB)).
+      enum:
+      - BOL
+      - SWB
+      example: SWB
+      type: string
+    isShippedOnboardType:
+      description: "Specifies whether the Transport document is a received for shipment,\
+        \ or shipped onboard."
+      example: true
+      type: boolean
+    numberOfCopies:
+      description: The requested number of copies of the Transport document to be
+        issued by the carrier. Only applicable for physical documents
+      example: 2
+      type: integer
+    numberOfOriginals:
+      description: Number of original copies of the negotiable bill of lading that
+        has been issued to the customer.
+      example: 4
+      type: integer
+    preCarriageUnderShippersResponsibility:
+      description: "Mode of transportation for pre-carriage (e.g., truck, barge, rail),\
+        \ under shipper&apos;s responsibility"
+      enum:
+      - VESSEL
+      - RAIL
+      - TRUCK
+      - BARGE
+      type: string
+    location:
+      allOf:
+      - $ref: '#/components/schemas/location_allOf'
+      - $ref: '#/components/schemas/location_allOf_1'
+      - $ref: '#/components/schemas/location_allOf_2'
+      - $ref: '#/components/schemas/location_allOf_3'
+      - $ref: '#/components/schemas/location_allOf_4'
+      description: "generally used to capture location-related data, also for locations\
+        \ without UN Location Codes."
+      type: object
+    locationName:
+      description: The name of the location.
+      example: Eiffel Tower
+      maxLength: 100
+      type: string
+    latitude:
+      description: Geographic coordinate that specifies the north–south position of
+        a point on the Earth&apos;s surface.
+      example: "48.85855005644273"
+      maxLength: 10
+      type: string
+    longitude:
+      description: Geographic coordinate that specifies the east–west position of
+        a point on the Earth&apos;s surface.
+      example: "2.294492036190964"
+      maxLength: 11
+      type: string
+    UNLocationCode:
+      description: The UN Location code specifying where the place is located.
+      example: USNYC
+      maxLength: 5
+      type: string
+    address:
+      allOf:
+      - $ref: '#/components/schemas/address_allOf'
+      - $ref: '#/components/schemas/address_allOf_1'
+      - $ref: '#/components/schemas/address_allOf_2'
+      - $ref: '#/components/schemas/address_allOf_3'
+      - $ref: '#/components/schemas/address_allOf_4'
+      - $ref: '#/components/schemas/address_allOf_5'
+      - $ref: '#/components/schemas/address_allOf_6'
+      - $ref: '#/components/schemas/address_allOf_7'
+      description: An object for storing address related information
+      type: object
+    addressName:
+      description: Name of the address
+      example: Henrik
+      maxLength: 100
+      type: string
+    streetName:
+      description: The name of the street of the party’s address.
+      example: Kronprincessegade
+      maxLength: 100
+      type: string
+    streetNumber:
+      description: The number of the street of the party’s address.
+      example: "54"
+      maxLength: 50
+      type: string
+    floor:
+      description: The floor of the party’s street number.
+      example: 5. sal
+      maxLength: 50
+      type: string
+    postCode:
+      description: The post code of the party’s address.
+      example: "1306"
+      maxLength: 10
+      type: string
+    cityName:
+      description: The city name of the party’s address.
+      example: København
+      maxLength: 65
+      type: string
+    stateRegion:
+      description: The state/region of the party’s address.
+      example: N/A
+      maxLength: 65
+      type: string
+    country:
+      description: The country of the party’s address.
+      example: Denmark
+      maxLength: 75
+      type: string
+    isElectronic:
+      description: An indicator whether the transport document is electronically transferred.
+      example: true
+      type: boolean
+    isChargesDisplayed:
+      description: An indicator whether the transport document should include charges.
+      example: true
+      type: boolean
+    error:
+      properties:
+        httpMethod:
+          description: The HTTP request method type
+          example: POST
+          type: string
+        requestUri:
+          description: The request URI.
+          example: https://dcsa.org/dcsa/tnt/v1/events
+          type: string
+        errors:
+          items:
+            $ref: '#/components/schemas/subErrors_inner'
+          type: array
+        statusCode:
+          description: The HTTP status code
+          example: 400
+          type: integer
+        statusCodeText:
+          description: The textual representation of the response status.
+          example: Bad Request
+          type: string
+        errorDateTime:
+          description: The date and time (in ISO 8601 format) the error occurred.
+          example: 2019-11-12T07:41:00+08:30
+          format: $date-time
+          type: string
+      required:
+      - errorDateTime
+      - errors
+      - httpMethod
+      - requestUri
+      - statusCode
+      - statusCodeText
+      type: object
+    subErrors:
+      items:
+        $ref: '#/components/schemas/subErrors_inner'
+      type: array
+    shippingInstructionNoID:
+      allOf:
+      - $ref: '#/components/schemas/shippingInstructionHeaderNoID'
+      - $ref: '#/components/schemas/cargoItems'
+      - $ref: '#/components/schemas/utilizedTransportEquipments'
+      - $ref: '#/components/schemas/documentParties'
+      - $ref: '#/components/schemas/shipmentLocations'
+      - $ref: '#/components/schemas/references'
+      description: "an enrichment to the original booking shared by the shipper to\
+        \ the carrier. The shipping instruction includes volume or weight, cargo items,\
+        \ shipping dates, origin, destination, and other special instructions. The\
+        \ information given by the shipper through the shipping instruction is the\
+        \ information required to create a Transport Document."
+      type: object
+    cargoItems:
+      properties:
+        cargoItems:
+          items:
+            $ref: '#/components/schemas/cargoItem'
+          type: array
+      type: object
+    cargoItem:
+      allOf:
+      - $ref: '#/components/schemas/cargoLineItems'
+      - $ref: '#/components/schemas/shippingInstructionHeaderNoID_allOf_9'
+      - $ref: '#/components/schemas/cargoItem_allOf'
+      - $ref: '#/components/schemas/cargoItem_allOf_1'
+      - $ref: '#/components/schemas/cargoItem_allOf_2'
+      - $ref: '#/components/schemas/cargoItem_allOf_3'
+      - $ref: '#/components/schemas/cargoItem_allOf_4'
+      - $ref: '#/components/schemas/cargoItem_allOf_5'
+      - $ref: '#/components/schemas/cargoItem_allOf_6'
+      - $ref: '#/components/schemas/cargoItem_allOf_7'
+      - $ref: '#/components/schemas/cargoItem_allOf_8'
+      - $ref: '#/components/schemas/cargoItem_allOf_9'
+      description: addresses the cargo items to be stuffed into a container for a
+        shipment. A cargo item cannot be split across containers.
+      required:
+      - HSCode
+      - descriptionOfGoods
+      - equipmentReference
+      - numberOfPackages
+      - packageCode
+      - weight
+      - weightUnit
+      type: object
+    cargoLineItems:
+      properties:
+        cargoLineItems:
+          items:
+            $ref: '#/components/schemas/cargoLineItem'
+          type: array
+      type: object
+    cargoLineItem:
+      allOf:
+      - $ref: '#/components/schemas/cargoLineItem_allOf'
+      - $ref: '#/components/schemas/cargoLineItem_allOf_1'
+      description: |
+        identifies the specific details of packages within a cargo item.
+      required:
+      - cargoLineItemID
+      - shippingMarks
+      type: object
+    cargoLineItemID:
+      description: Identifies the cargo line item (package) within the cargo. The
+        cargo line item ID is provided by the shipper and is used to define the stuffing.
+        Cargo line items belonging to the same cargo items are stuffed in the same
+        container.
+      type: string
+    shippingMarks:
+      description: The identifying details of a package or the actual markings that
+        appear on the package(s). This information is provided by the shipper.
+      type: string
+    descriptionOfGoods:
+      description: The cargo description are details which accurately and properly
+        describe the cargo being shipped in the container(s) as provided by the shipper.
+      type: string
+    HSCode:
+      description: Used by customs to classify the product being shipped.
+      maxLength: 10
+      type: string
+    weight:
+      description: The total weight of the cargo including packaging items being carried
+        in the container(s). Excludes the tare weight of the container(s).
+      example: 13000.3
+      type: number
+    volume:
+      description: "Calculated by multiplying the width, height, and length of the\
+        \ packed cargo."
+      example: 12
+      type: number
+    weightUnit:
+      description: The unit of measure which can be expressed in imperial or metric
+        terms
+      enum:
+      - KGM
+      - LBR
+      example: KGM
+      type: string
+    volumeUnit:
+      description: The unit of measure which can be expressed in either imperial or
+        metric terms
+      enum:
+      - CBM
+      - CFT
+      example: CBM
+      type: string
+    numberOfPackages:
+      description: Specifies the number of packages associated with this cargo item
+      example: 18
+      type: integer
+    packageCode:
+      description: The unique identifier for the package type
+      example: 5H
+      maxLength: 3
+      type: string
+    utilizedTransportEquipments:
+      properties:
+        utilizedTransportEquipments:
+          items:
+            $ref: '#/components/schemas/utilizedTransportEquipment'
+          type: array
+      type: object
+    utilizedTransportEquipment:
+      allOf:
+      - $ref: '#/components/schemas/utilizedTransportEquipment_allOf'
+      - $ref: '#/components/schemas/utilizedTransportEquipment_allOf_1'
+      - $ref: '#/components/schemas/utilizedTransportEquipment_allOf_2'
+      - $ref: '#/components/schemas/utilizedTransportEquipment_allOf_3'
+      - $ref: '#/components/schemas/seals'
+      description: |
+        specifies the container assigned to a shipment
+      required:
+      - cargoGrossWeight
+      - cargoGrossWeightUnit
+      - equipment
+      type: object
+    equipment:
+      allOf:
+      - $ref: '#/components/schemas/cargoItem_allOf_9'
+      - $ref: '#/components/schemas/equipment_allOf'
+      - $ref: '#/components/schemas/equipment_allOf_1'
+      - $ref: '#/components/schemas/cargoItem_allOf_5'
+      - $ref: '#/components/schemas/equipment_allOf_2'
+      description: |
+        used for storing cargo in/on during transport. The equipment size/type is defined by the ISO 6346 code. The most common equipment size/type is 20'/40'/45' Dry Freight Container, but several different versions exist.
+      required:
+      - equipmentReference
+      - isShipperOwned
+      type: object
+    ISOEquipmentCode:
+      description: Unique code for the different equipment size/type used for transporting
+        commodities. The code is a concatenation of ISO Equipment Size Code and ISO
+        Equipment Type Code A and follows the ISO 6346 standard.
+      maxLength: 4
+      type: string
+    tareWeight:
+      description: The weight of an empty container (gross container weight).
+      example: 12000
+      type: number
+    isShipperOwned:
+      description: Indicates whether the container is shipper owned (SOC).
+      example: true
+      type: boolean
+    cargoGrossWeight:
+      description: "The grand total weight of the cargo and weight per container(s)\
+        \ including packaging items being carried, which can be expressed in imperial\
+        \ or metric terms, as provided by the shipper. Excludes the tare weight of\
+        \ the container(s)."
+      example: 12000
+      type: number
+    temperatureMin:
+      description: Indicates the minimum temperature setting on the container.
+      example: -18.1
+      type: number
+    temperatureMax:
+      description: Indicates the maximum temperature setting on the container.
+      example: 64.3
+      type: number
+    temperatureUnit:
+      description: Celsius (CEL) or Fahrenheit (FAH).
+      enum:
+      - CEL
+      - FAH
+      example: CEL
+      type: string
+    humidityMin:
+      description: Indicates the minimum humidity setting on the container in percent.
+      example: 80
+      type: number
+    humidityMax:
+      description: Indicates the maximum humidity setting on the container in percent.
+      example: 100
+      type: number
+    ventilationMin:
+      description: Indicates the minimum ventilation setting on the container in CBM/Hr.
+      example: 266
+      type: number
+    ventilationMax:
+      description: Indicates the maximum ventilation setting on the container in CBM/Hr.
+      example: 296
+      type: number
+    seals:
+      properties:
+        seals:
+          items:
+            $ref: '#/components/schemas/seal'
+          type: array
+      type: object
+    seal:
+      allOf:
+      - $ref: '#/components/schemas/seal_allOf'
+      - $ref: '#/components/schemas/seal_allOf_1'
+      - $ref: '#/components/schemas/seal_allOf_2'
+      description: addresses the seal-related information associated with the shipment
+        equipment. A seal is put on a shipment equipment once it is loaded. This seal
+        is meant to stay on until the shipment equipment reaches its final destination.
+      required:
+      - sealNumber
+      - sealType
+      type: object
+    sealNumber:
+      description: Identifies a seal affixed to the container.
+      maxLength: 15
+      type: string
+    sealSource:
+      description: |
+        The source of the seal, namely who has affixed the seal. This attribute links to the Seal Source ID defined in the Seal Source reference data entity.
+        - CAR (Carrier)
+        - SHI (Shipper)
+        - PHY (Phytosanitary)
+        - VET (Veterinary)
+        - CUS (Customs)
+      enum:
+      - CAR
+      - SHI
+      - PHY
+      - VET
+      - CUS
+      example: CUS
+      type: string
+    sealType:
+      description: |
+        The type of seal. This attribute links to the Seal Type ID defined in the Seal Type reference data entity.
+        - KLP (Keyless padlock)
+        - BLT (Bolt)
+        - WIR (Wire)
+      enum:
+      - KLP
+      - BLT
+      - WIR
+      example: WIR
+      type: string
+    documentParties:
+      properties:
+        documentParties:
+          items:
+            $ref: '#/components/schemas/documentParty'
+          type: array
+      type: object
+    documentParty:
+      allOf:
+      - $ref: '#/components/schemas/documentParty_allOf'
+      - $ref: '#/components/schemas/documentParty_allOf_1'
+      - $ref: '#/components/schemas/documentParty_allOf_2'
+      - $ref: '#/components/schemas/documentParty_allOf_3'
+      - $ref: '#/components/schemas/documentParty_allOf_4'
+      description: stores the parties involved in the transport document.
+      required:
+      - isToBeNotified
+      - partyContactDetails
+      - partyFunction
+      type: object
+    partyNoID:
+      allOf:
+      - $ref: '#/components/schemas/partyNoID_allOf'
+      - $ref: '#/components/schemas/partyNoID_allOf_1'
+      - $ref: '#/components/schemas/partyNoID_allOf_2'
+      - $ref: '#/components/schemas/partyNoID_allOf_3'
+      - $ref: '#/components/schemas/partyNoID_allOf_4'
+      - $ref: '#/components/schemas/partyNoID_allOf_5'
+      description: refers to a company or a legal entity.
+      type: object
+    partyName:
+      description: Name of the party.
+      example: Asseco Denmark
+      maxLength: 100
+      type: string
+    taxReference1:
+      description: The identifying number of the consignee or shipper (Individual
+        or entity) used for tax purposes.
+      example: CVR-25645774
+      maxLength: 20
+      type: string
+    taxReference2:
+      description: Optional second identifying number of the consignee or shipper
+        (Individual or entity) used for tax purposes.
+      example: CVR-25645774
+      maxLength: 20
+      type: string
+    publicKey:
+      description: The public key used for a digital signature.
+      example: eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IkFzaW
+      maxLength: 500
+      type: string
+    nmftaCode:
+      description: The Standard Carrier Alpha Code (SCAC) provided by NMFTA.
+      example: MMCU
+      maxLength: 4
+      type: string
+    partyFunction:
+      description: |
+        Specifies the role of the party in the context of the given Shipping Instruction.
+        - OS (Original shipper)
+        - CN (Consignee)
+        - COW (Invoice payer on behalf of the consignor (shipper))
+        - COX (Invoice payer on behalf of the consignee)
+        - MS (Document/message issuer/sender)
+        - N1 (First Notify Party)
+        - N2 (Second Notify Party)
+        - NI (Other Notify Party)
+        - DDR (Consignor's freight forwarder)
+        - DDS (Consignee's freight forwarder)
+      enum:
+      - OS
+      - CN
+      - COW
+      - COX
+      - MS
+      - N1
+      - N2
+      - NI
+      - DDR
+      - DDS
+      example: DDS
+      type: string
+    addressLine:
+      description: A single address line.
+      example: Kronprincessegade 54
+      maxLength: 250
+      type: string
+    name:
+      description: Name of the contact
+      example: Henrik
+      maxLength: 100
+      type: string
+    phone:
+      description: Phone number for the contact
+      example: +45 33364660
+      maxLength: 30
+      type: string
+    email:
+      description: E-mail address for the contact
+      example: info@asseco.dk
+      maxLength: 100
+      type: string
+    isToBeNotified:
+      description: Used to decide whether the party will be notified of the arrival
+        of the cargo.
+      example: true
+      type: boolean
+    shipmentLocations:
+      properties:
+        shipmentLocations:
+          items:
+            $ref: '#/components/schemas/shipmentLocation'
+          type: array
+      type: object
+    shipmentLocation:
+      allOf:
+      - $ref: '#/components/schemas/shipmentLocationNoLocationType'
+      - $ref: '#/components/schemas/shipmentLocation_allOf'
+      description: "maps the relationship between Shipment and Location, e.g., the\
+        \ place of receipt and the places of delivery for a specific shipment."
+      required:
+      - locationType
+      type: object
+    shipmentLocationNoLocationType:
+      allOf:
+      - $ref: '#/components/schemas/shipmentLocationNoLocationType_allOf'
+      - $ref: '#/components/schemas/shipmentLocationNoLocationType_allOf_1'
+      description: "maps the relationship between Shipment and Location, e.g., the\
+        \ place of receipt and the places of delivery for a specific shipment."
+      title: shipmentLocation
+      type: object
+    displayedName:
+      description: The address of the party to be displayed on the transport document.
+      maxLength: 250
+      type: string
+    locationType:
+      description: |
+        Links to the Location Type Code defined by DCSA.
+        - PRE (Place of Receipt)
+        - PDE (Place of Delivery)
+        - PCF (Pre-carriage From)
+        - OIR (Onward In-land Routing)
+        - POL (Port of Loading)
+        - POD (Port of Discharge)
+        - ORI (Origin of goods)
+        - DRL (Depot release location)
+      enum:
+      - PRE
+      - PDE
+      - PCF
+      - OIR
+      - POL
+      - POD
+      - ORI
+      - DRL
+      example: PRE
+      type: string
+    references:
+      properties:
+        references:
+          items:
+            $ref: '#/components/schemas/reference'
+          type: array
+      type: object
+    reference:
+      allOf:
+      - $ref: '#/components/schemas/reference_allOf'
+      - $ref: '#/components/schemas/reference_allOf_1'
+      description: |
+        references provided by the shipper or freight forwarder at the time of booking or at the time of providing shipping instruction. Carriers share it back when providing track and trace event updates, some are also printed on the B/L. Customers can use these references to track shipments in their internal systems.
+      required:
+      - referenceType
+      - referenceValue
+      type: object
+    referenceType:
+      description: |
+        The reference type codes defined by DCSA.
+        - FF (Freight Forwarder’s Reference)
+        - SI (Shipper’s Reference)
+        - PO (Purchase Order Reference)
+        - CR (Customer’s Reference)
+        - AAO (Consignee’s Reference)
+      enum:
+      - FF
+      - SI
+      - PO
+      - CR
+      - AAO
+      example: FF
+      type: string
+    referenceValue:
+      description: The actual value of the reference.
+      maxLength: 100
+      type: string
+    shippingInstruction:
+      allOf:
+      - $ref: '#/components/schemas/shippingInstructionHeader'
+      - $ref: '#/components/schemas/cargoItems'
+      - $ref: '#/components/schemas/utilizedTransportEquipments'
+      - $ref: '#/components/schemas/documentParties'
+      - $ref: '#/components/schemas/shipmentLocations'
+      - $ref: '#/components/schemas/references'
+      description: "The Shipping Instruction is an enrichment to the original booking\
+        \ shared by the shipper to the carrier. The shipping instruction includes\
+        \ volume or weight, cargo items, shipping dates, origin, destination, and\
+        \ other special instructions. The information given by the shipper through\
+        \ the shipping instruction is the information required to create a Transport\
+        \ Document."
+      type: object
+    transportDocumentHeader:
+      allOf:
+      - $ref: '#/components/schemas/transportDocumentHeader_allOf'
+      - $ref: '#/components/schemas/transportDocumentHeader_allOf_1'
+      - $ref: '#/components/schemas/transportDocumentHeader_allOf_2'
+      - $ref: '#/components/schemas/transportDocumentHeader_allOf_3'
+      - $ref: '#/components/schemas/transportDocumentHeader_allOf_4'
+      - $ref: '#/components/schemas/transportDocumentHeader_allOf_5'
+      - $ref: '#/components/schemas/transportDocumentHeader_allOf_6'
+      - $ref: '#/components/schemas/transportDocumentHeader_allOf_7'
+      - $ref: '#/components/schemas/transportDocumentHeader_allOf_8'
+      - $ref: '#/components/schemas/transportDocumentHeader_allOf_9'
+      - $ref: '#/components/schemas/transportDocumentHeader_allOf_10'
+      - $ref: '#/components/schemas/transportDocumentHeader_allOf_11'
+      - $ref: '#/components/schemas/transportDocumentHeader_allOf_12'
+      - $ref: '#/components/schemas/transportDocumentHeader_allOf_13'
+      - $ref: '#/components/schemas/transportDocumentHeader_allOf_14'
+      - $ref: '#/components/schemas/transportDocumentHeader_allOf_15'
+      required:
+      - cargoMovementTypeAtDestination
+      - cargoMovementTypeAtOrigin
+      - issueDate
+      - issuer
+      - receiptDeliveryTypeAtDestination
+      - receiptDeliveryTypeAtOrigin
+      - shippingInstructionID
+      - termsAndConditions
+      - transportDocumentReference
+      type: object
+    transportDocumentReference:
+      description: |
+        A unique number allocated by the shipping line to the transport document and the main number used for the tracking of the status of the shipment.
+      maxLength: 20
+      type: string
+    issueDate:
+      description: Date when the transport document has been issued
+      example: 2020-12-12
+      format: date
+      type: string
+    shippedOnBoardDate:
+      description: Date when the last container that is linked to the transport document
+        is physically loaded onboard the vessel indicated on the transport document.
+      example: 2020-12-12
+      format: date
+      type: string
+    receivedForShipmentDate:
+      description: Date when the last container linked to the transport document is
+        physically in the terminal (customers cleared against the intended vessel).
+      example: 2020-12-12
+      format: date
+      type: string
+    termsAndConditions:
+      description: Carrier general terms and conditions for this transport document.
+      type: string
+    issuerCode:
+      description: |
+        The code used for identifying the specific issuer.
+      example: MMCU
+      maxLength: 4
+      type: string
+    issuerCodeListProvider:
+      description: |
+        The provider used for identifying the issuer Code
+      enum:
+      - SMDG
+      - NMFTA
+      example: NMFTA
+      type: string
+    declaredValueCurrency:
+      description: "The currency used for the declared value, using the 3-character\
+        \ code defined by ISO 4217."
+      example: DKK
+      maxLength: 3
+      type: string
+    declaredValue:
+      description: "The value of the cargo that the shipper declares to avoid the\
+        \ carrier&apos;s limitation of liability and \"Ad Valorem\" freight, i.e.\
+        \ freight which is calculated based on the value of the goods declared by\
+        \ the shipper."
+      example: 1231.1
+      type: number
+    numberOfRiderPages:
+      description: The number of additional pages required to contain the goods description
+        on a transport document. Only applicable for physical transport documents.
+      example: 2
+      type: integer
+    cargoMovementTypeAtOrigin:
+      description: |
+        Refers to the shipment term at the loading of the cargo into the container. Options are defined in the Cargo Movement Type entity.
+      enum:
+      - FCL
+      - LCL
+      - BB
+      example: FCL
+      maxLength: 3
+      type: string
+    cargoMovementTypeAtDestination:
+      description: |
+        Refers to the shipment term at the unloading of the cargo out of the container. Options are defined in the Cargo Movement Type entity.
+      enum:
+      - FCL
+      - LCL
+      - BB
+      example: FCL
+      maxLength: 3
+      type: string
+    receiptDeliveryTypeAtOrigin:
+      description: |
+        Indicates the type of service offered at Origin. Options are defined in the Receipt/Delivery entity.
+      enum:
+      - CY
+      - SD
+      - CFS
+      example: CY
+      maxLength: 3
+      type: string
+    receiptDeliveryTypeAtDestination:
+      description: |
+        Indicates the type of service offered at Destination. Options are defined in the Receipt/Delivery entity.
+      enum:
+      - CY
+      - SD
+      - CFS
+      example: CY
+      maxLength: 3
+      type: string
+    serviceContractReference:
+      description: "Reference number for agreement between shipper and carrier through\
+        \ which the shipper commits to provide a certain minimum quantity of cargo\
+        \ over a fixed period, and the carrier commits to a certain rate or rate schedule."
+      maxLength: 30
+      type: string
+    transportDocument:
+      allOf:
+      - $ref: '#/components/schemas/transportDocumentHeader'
+      - $ref: '#/components/schemas/transportDocument_allOf'
+      - $ref: '#/components/schemas/charges'
+      - $ref: '#/components/schemas/clauses'
+      - $ref: '#/components/schemas/transports'
+      description: "The document that governs the terms of carriage between shipper\
+        \ and carrier for maritime transportation. Two distinct types of transport\
+        \ documents exist:\n- Bill of Lading\n- Sea Waybill. \n"
+      required:
+      - shipmentLocations
+      - shippingInstruction
+      - transports
+      type: object
+    charges:
+      properties:
+        charges:
+          items:
+            $ref: '#/components/schemas/charge'
+          type: array
+      type: object
+    charge:
+      allOf:
+      - $ref: '#/components/schemas/charge_allOf'
+      - $ref: '#/components/schemas/charge_allOf_1'
+      - $ref: '#/components/schemas/charge_allOf_2'
+      - $ref: '#/components/schemas/charge_allOf_3'
+      - $ref: '#/components/schemas/charge_allOf_4'
+      - $ref: '#/components/schemas/charge_allOf_5'
+      - $ref: '#/components/schemas/charge_allOf_6'
+      description: |
+        addresses the monetary value of freight and other service charges for a transport document.
+      required:
+      - calculationBasis
+      - chargeType
+      - currencyAmount
+      - currencyCode
+      - paymentTerm
+      - quantity
+      - unitPrice
+      type: object
+    chargeType:
+      description: Description of the charge type applied.
+      maxLength: 20
+      type: string
+    currencyAmount:
+      description: "The monetary value of all freight and other service charges for\
+        \ a transport document, with a maximum of 2-digit decimals."
+      example: 1012.12
+      type: number
+    currencyCode:
+      description: "The currency for the charge, using a 3-character code (ISO 4217)."
+      example: DKK
+      maxLength: 3
+      type: string
+    paymentTerm:
+      description: An indicator of whether a charge is prepaid or collect.
+      example: PREPAID
+      maxLength: 7
+      type: string
+    calculationBasis:
+      description: "The code specifying the measure unit used for the corresponding\
+        \ unit price for this cost, such as per day, per ton, per square metre."
+      example: Per day
+      maxLength: 50
+      type: string
+    unitPrice:
+      description: The unit price of this charge item in the currency of the charge.
+      example: 3456.6
+      type: number
+    quantity:
+      description: The amount of unit for this charge item.
+      example: 34.4
+      type: number
+    clauses:
+      properties:
+        clauses:
+          items:
+            $ref: '#/components/schemas/clause'
+          type: array
+      type: object
+    clause:
+      allOf:
+      - $ref: '#/components/schemas/clause_allOf'
+      description: |
+        comprises clauses, added by the carrier to the Transport Document, which are subject to local rules/guidelines or certain mandatory information required to be shared with the customer. Usually printed below the cargo description.
+      type: object
+    clauseContent:
+      description: The content of the clause.
+      type: string
+    transports:
+      properties:
+        transports:
+          items:
+            $ref: '#/components/schemas/transport'
+          type: array
+      type: object
+    transport:
+      allOf:
+      - $ref: '#/components/schemas/transport_allOf'
+      - $ref: '#/components/schemas/transport_allOf_1'
+      - $ref: '#/components/schemas/transport_allOf_2'
+      - $ref: '#/components/schemas/transport_allOf_3'
+      - $ref: '#/components/schemas/transport_allOf_4'
+      - $ref: '#/components/schemas/transport_allOf_5'
+      - $ref: '#/components/schemas/transport_allOf_6'
+      - $ref: '#/components/schemas/transport_allOf_7'
+      description: A list of transports sorted by ShipmentTransport sequenceNumber
+      type: object
+    plannedDepartureDate:
+      description: |
+        The planned date of departure.
+      format: $date
+      type: string
+    plannedArrivalDate:
+      description: |
+        The planned date of arrival.
+      format: $date
+      type: string
+    modeOfTransport:
+      description: |
+        The mode of transport as defined by DCSA.
+      enum:
+      - VESSEL
+      - RAIL
+      - TRUCK
+      - BARGE
+      type: string
+    vesselIMONumber:
+      description: |
+        The unique reference for a registered Vessel. The reference is the International Maritime Organisation (IMO) number, also sometimes known as the Lloyd&apos;s register code, which does not change during the lifetime of the vessel
+      example: "1801323"
+      maxLength: 7
+      type: string
+    carrierVoyageNumber:
+      description: The vessel operator-specific identifier of the Voyage.
+      example: 2103S
+      maxLength: 50
+      type: string
+    isUnderShippersResponsibility:
+      description: |
+        Indicator whether mode of transportation for pre-carriage (e.g. truck, barge, rail) is under shipper's responsibility
+      example: false
+      type: boolean
+    shipmentEventTypeCode:
+      description: |
+        The status of the document in the process. Possible values are
+        - RECE (Received)
+        - DRFT (Drafted)
+        - PENA (Pending Approval)
+        - PENU (Pending Update)
+        - REJE (Rejected)
+        - APPR (Approved)
+        - ISSU (Issued)
+        - SURR (Surrendered)
+        - SUBM (Submitted)
+        - VOID (Void)
+        - CONF (Confirmed)
+      enum:
+      - RECE
+      - DRFT
+      - PENA
+      - PENU
+      - REJE
+      - APPR
+      - ISSU
+      - SURR
+      - SUBM
+      - VOID
+      - CONF
+      example: DRFT
+      type: string
+    shipmentEvent:
+      allOf:
+      - $ref: '#/components/schemas/baseEvent'
+      - $ref: '#/components/schemas/baseShipmentEvent'
+      type: object
+    baseEvent:
+      allOf:
+      - $ref: '#/components/schemas/baseEvent_allOf'
+      - $ref: '#/components/schemas/baseEvent_allOf_1'
+      - $ref: '#/components/schemas/baseEventBody'
+      required:
+      - eventCreatedDateTime
+      type: object
+    eventID:
+      description: |
+        The unique identifier for the event (the message - not the source).
+
+        <b>NB</b>&#58; This field should be considered Metadata
+      example: 84db923d-2a19-4eb0-beb5-446c1ec57d34
+      format: uuid
+      type: string
+    eventCreatedDateTime:
+      description: |
+        The timestamp of when the event was created.
+
+        <b>NB</b>&#58; This field should be considered Metadata
+      example: 2021-01-09T14:12:56+01:00
+      format: date-time
+      type: string
+    baseEventBody:
+      allOf:
+      - $ref: '#/components/schemas/baseEventBody_allOf'
+      - $ref: '#/components/schemas/baseEventBody_allOf_1'
+      - $ref: '#/components/schemas/baseEventBody_allOf_2'
+      description: |
+        The Event entity is described as a generalization of all the specific event categories. An event always takes place in relation to a shipment and can additionally be linked to a transport or an equipment
+      required:
+      - eventClassifierCode
+      - eventDateTime
+      - eventType
+      type: object
+    eventType:
+      description: |
+        The Event Type of the object - to be used as a discriminator.
+
+        <b>NB</b>&#58; This field should be considered Metadata
+      type: string
+    eventClassifierCode:
+      description: |
+        Code for the event classifier. Values can vary depending on eventType
+      type: string
+    eventDateTime:
+      description: "The local date and time, where the event took place or when the\
+        \ event will take place, in ISO 8601 format."
+      example: 2019-11-12T07:41:00+08:30
+      format: date-time
+      type: string
+    baseShipmentEvent:
+      allOf:
+      - $ref: '#/components/schemas/baseShipmentEvent_allOf'
+      - $ref: '#/components/schemas/baseShipmentEvent_allOf_1'
+      - $ref: '#/components/schemas/baseShipmentEvent_allOf_2'
+      - $ref: '#/components/schemas/baseShipmentEvent_allOf_3'
+      - $ref: '#/components/schemas/baseShipmentEvent_allOf_4'
+      - $ref: '#/components/schemas/baseShipmentEvent_allOf_5'
+      - $ref: '#/components/schemas/baseShipmentEvent_allOf_6'
+      - $ref: '#/components/schemas/baseShipmentEvent_allOf_7'
+      - $ref: '#/components/schemas/baseShipmentEvent_allOf_8'
+      - $ref: '#/components/schemas/baseShipmentEvent_allOf_9'
+      - $ref: '#/components/schemas/baseShipmentEvent_allOf_10'
+      - $ref: '#/components/schemas/baseShipmentEvent_allOf_11'
+      - $ref: '#/components/schemas/references'
+      description: |
+        The shipment event entity is a specialization of the event entity to support specification of data that only applies to a shipment event.
+      required:
+      - documentID
+      - documentTypeCode
+      - shipmentEventTypeCode
+      type: object
+    documentID:
+      description: |
+        The id of the object defined by the documentTypeCode.
+      type: string
+    documentTypeCode:
+      description: |
+        The code to identify the type of information documentID points to. Can be one of the following values
+        - BKG (Booking)
+        - SHI (Shipping Instruction)
+        - SRM (Shipment Release Message)
+        - TRD (Transport Document)
+        - ARN (Arrival Notice)
+      enum:
+      - BKG
+      - SHI
+      - SRM
+      - TRD
+      - ARN
+      example: SHI
+      maxLength: 3
+      type: string
+    shipmentInformationType:
+      deprecated: true
+      description: |
+        The code to identify the type of information documentID points to. Can be one of the following values
+        - BOK (Booking - deprecated use BKG instead)
+        - BKG (Booking)
+        - SHI (Shipping Instruction)
+        - VGM (Verified Gross Mass)
+        - SRM (Shipment Release Message)
+        - TRD (Transport Document)
+        - ARN (Arrival Notice)
+
+        <b>Deprecated</b> - use documentTypeCode instead
+      enum:
+      - BOK
+      - BKG
+      - SHI
+      - VGM
+      - SRM
+      - TRD
+      - ARN
+      example: SHI
+      maxLength: 3
+      type: string
+    reason:
+      description: Reason field in a Shipment event. This field can be used to explain
+        why a specific event has been sent.
+      example: The following attributes are missing...
+      type: string
+    eventTypeCode:
+      deprecated: true
+      description: |
+        Deprecated - Unique identifier for Event Type Code. This has been replaced by Specialized eventTypeCodes: shipmentEventTypeCode, transportEventTypeCode, equipmentEventTypeCode and opertaionsEventType
+      example: ARRI
+      maxLength: 4
+      type: string
+    shipmentID:
+      description: The identifier for a shipment
+      example: d9c69bc8-294d-46d1-807c-654598341374
+      format: uuid
+      type: string
+    subErrors_inner:
+      properties:
+        reason:
+          description: High level error message.
+          example: invalidQuery
+          type: string
+        message:
+          description: Detailed error message.
+          example: The request did not contain one of the three required query parameters.
+          type: string
+      required:
+      - message
+      - reason
+      type: object
+    shippingInstructionHeader_allOf:
+      properties:
+        shippingInstructionID:
+          description: |
+            The identifier for a shipping instruction provided by the carrier for system purposes.
+          example: e0559d83-00e2-438e-afd9-fdd610c1a008
+          maxLength: 100
+          type: string
+      type: object
+      example: null
+    shippingInstructionHeaderNoID_allOf:
+      properties:
+        transportDocumentType:
+          $ref: '#/components/schemas/transportDocumentType'
+      type: object
+      example: null
+    shippingInstructionHeaderNoID_allOf_1:
+      properties:
+        isShippedOnboardType:
+          description: "Specifies whether the Transport document is a received for\
+            \ shipment, or shipped onboard."
+          example: true
+          type: boolean
+      type: object
+      example: null
+    shippingInstructionHeaderNoID_allOf_2:
+      properties:
+        numberOfCopies:
+          description: The requested number of copies of the Transport document to
+            be issued by the carrier. Only applicable for physical documents
+          example: 2
+          type: integer
+      type: object
+      example: null
+    shippingInstructionHeaderNoID_allOf_3:
+      properties:
+        numberOfOriginals:
+          description: Number of original copies of the negotiable bill of lading
+            that has been issued to the customer.
+          example: 4
+          type: integer
+      type: object
+      example: null
+    shippingInstructionHeaderNoID_allOf_4:
+      properties:
+        preCarriageUnderShippersResponsibility:
+          $ref: '#/components/schemas/preCarriageUnderShippersResponsibility'
+      type: object
+      example: null
+    shippingInstructionHeaderNoID_allOf_5:
+      properties:
+        invoicePayableAt:
+          $ref: '#/components/schemas/location'
+      type: object
+      example: null
+    shippingInstructionHeaderNoID_allOf_6:
+      properties:
+        invoicePayableAt:
+          description: A location object - here with an example with only UN location
+            code and City name present
+          example:
+            UNLocationCode: USNYC
+            address:
+              cityName: København
+              stateRegion: N/A
+              country: Denmark
+      type: object
+      example: null
+    shippingInstructionHeaderNoID_allOf_7:
+      properties:
+        isElectronic:
+          description: An indicator whether the transport document is electronically
+            transferred.
+          example: true
+          type: boolean
+      type: object
+      example: null
+    shippingInstructionHeaderNoID_allOf_8:
+      properties:
+        isChargesDisplayed:
+          description: An indicator whether the transport document should include
+            charges.
+          example: true
+          type: boolean
+      type: object
+      example: null
+    shippingInstructionHeaderNoID_allOf_9:
+      properties:
+        carrierBookingReference:
+          description: A set of unique characters provided by carrier to identify
+            a booking.
+          example: ABC709951
+          maxLength: 35
+          type: string
+      type: object
+      example: null
+    shippingInstructionHeaderNoID_allOf_10:
+      properties:
+        carrierBookingReference:
+          description: The associated booking number provided by the carrier. Cannot
+            be used in combination with Cargo Item level carrierBookingReference
+      type: object
+      example: null
+    location_allOf:
+      properties:
+        locationName:
+          description: The name of the location.
+          example: Eiffel Tower
+          maxLength: 100
+          type: string
+      type: object
+      example: null
+    location_allOf_1:
+      properties:
+        latitude:
+          description: Geographic coordinate that specifies the north–south position
+            of a point on the Earth&apos;s surface.
+          example: "48.85855005644273"
+          maxLength: 10
+          type: string
+      type: object
+      example: null
+    location_allOf_2:
+      properties:
+        longitude:
+          description: Geographic coordinate that specifies the east–west position
+            of a point on the Earth&apos;s surface.
+          example: "2.294492036190964"
+          maxLength: 11
+          type: string
+      type: object
+      example: null
+    location_allOf_3:
+      properties:
+        UNLocationCode:
+          description: The UN Location code specifying where the place is located.
+          example: USNYC
+          maxLength: 5
+          type: string
+      type: object
+      example: null
+    location_allOf_4:
+      properties:
+        address:
+          allOf:
+          - $ref: '#/components/schemas/address'
+          description: Address related information
+      type: object
+      example: null
+    address_allOf:
+      properties:
+        name:
+          description: Name of the address
+          example: Henrik
+          maxLength: 100
+          type: string
+      type: object
+      example: null
+    address_allOf_1:
+      properties:
+        street:
+          description: The name of the street of the party’s address.
+          example: Kronprincessegade
+          maxLength: 100
+          type: string
+      type: object
+      example: null
+    address_allOf_2:
+      properties:
+        streetNumber:
+          description: The number of the street of the party’s address.
+          example: "54"
+          maxLength: 50
+          type: string
+      type: object
+      example: null
+    address_allOf_3:
+      properties:
+        floor:
+          description: The floor of the party’s street number.
+          example: 5. sal
+          maxLength: 50
+          type: string
+      type: object
+      example: null
+    address_allOf_4:
+      properties:
+        postCode:
+          description: The post code of the party’s address.
+          example: "1306"
+          maxLength: 10
+          type: string
+      type: object
+      example: null
+    address_allOf_5:
+      properties:
+        city:
+          description: The city name of the party’s address.
+          example: København
+          maxLength: 65
+          type: string
+      type: object
+      example: null
+    address_allOf_6:
+      properties:
+        stateRegion:
+          description: The state/region of the party’s address.
+          example: N/A
+          maxLength: 65
+          type: string
+      type: object
+      example: null
+    address_allOf_7:
+      properties:
+        country:
+          description: The country of the party’s address.
+          example: Denmark
+          maxLength: 75
+          type: string
+      type: object
+      example: null
+    cargoItem_allOf:
+      properties:
+        carrierBookingReference:
+          description: The associated booking number provided by the carrier for this
+            cargo item. Cannot be used in combination with Shipping Instruction header
+            level carrierBookingReference
+      type: object
+      example: null
+    cargoItem_allOf_1:
+      properties:
+        descriptionOfGoods:
+          description: The cargo description are details which accurately and properly
+            describe the cargo being shipped in the container(s) as provided by the
+            shipper.
+          type: string
+      type: object
+      example: null
+    cargoItem_allOf_2:
+      properties:
+        HSCode:
+          description: Used by customs to classify the product being shipped.
+          maxLength: 10
+          type: string
+      type: object
+      example: null
+    cargoItem_allOf_3:
+      properties:
+        weight:
+          description: The total weight of the cargo including packaging items being
+            carried in the container(s). Excludes the tare weight of the container(s).
+          example: 13000.3
+          type: number
+      type: object
+      example: null
+    cargoItem_allOf_4:
+      properties:
+        volume:
+          description: "Calculated by multiplying the width, height, and length of\
+            \ the packed cargo."
+          example: 12
+          type: number
+      type: object
+      example: null
+    cargoItem_allOf_5:
+      properties:
+        weightUnit:
+          $ref: '#/components/schemas/weightUnit'
+      type: object
+      example: null
+    cargoItem_allOf_6:
+      properties:
+        volumeUnit:
+          $ref: '#/components/schemas/volumeUnit'
+      type: object
+      example: null
+    cargoItem_allOf_7:
+      properties:
+        numberOfPackages:
+          description: Specifies the number of packages associated with this cargo
+            item
+          example: 18
+          type: integer
+      type: object
+      example: null
+    cargoItem_allOf_8:
+      properties:
+        packageCode:
+          description: The unique identifier for the package type
+          example: 5H
+          maxLength: 3
+          type: string
+      type: object
+      example: null
+    cargoItem_allOf_9:
+      properties:
+        equipmentReference:
+          description: |
+            The unique identifier for the equipment, which should follow the BIC ISO Container Identification Number where possible.
+            According to ISO 6346, a container identification code consists of a 4-letter prefix and a 7-digit number (composed of a 3-letter owner code, a category identifier, a serial number, and a check-digit). If a container does not comply with ISO 6346, it is suggested to follow Recommendation #2 “Container with non-ISO identification” from SMDG.
+          example: APZU4812090
+          maxLength: 15
+          type: string
+      type: object
+      example: null
+    cargoLineItem_allOf:
+      properties:
+        cargoLineItemID:
+          description: Identifies the cargo line item (package) within the cargo.
+            The cargo line item ID is provided by the shipper and is used to define
+            the stuffing. Cargo line items belonging to the same cargo items are stuffed
+            in the same container.
+          type: string
+      type: object
+      example: null
+    cargoLineItem_allOf_1:
+      properties:
+        shippingMarks:
+          description: The identifying details of a package or the actual markings
+            that appear on the package(s). This information is provided by the shipper.
+          type: string
+      type: object
+      example: null
+    utilizedTransportEquipment_allOf:
+      properties:
+        equipment:
+          $ref: '#/components/schemas/equipment'
+      type: object
+      example: null
+    utilizedTransportEquipment_allOf_1:
+      properties:
+        cargoGrossWeightUnit:
+          $ref: '#/components/schemas/weightUnit'
+      type: object
+      example: null
+    utilizedTransportEquipment_allOf_2:
+      properties:
+        cargoGrossWeight:
+          description: "The grand total weight of the cargo and weight per container(s)\
+            \ including packaging items being carried, which can be expressed in imperial\
+            \ or metric terms, as provided by the shipper. Excludes the tare weight\
+            \ of the container(s)."
+          example: 12000
+          type: number
+      type: object
+      example: null
+    utilizedTransportEquipment_allOf_3:
+      properties:
+        activeReeferSettings:
+          allOf:
+          - properties:
+              temperatureMin:
+                $ref: '#/components/schemas/temperatureMin'
+            type: object
+          - properties:
+              temperatureMax:
+                $ref: '#/components/schemas/temperatureMax'
+            type: object
+          - properties:
+              temperatureUnit:
+                $ref: '#/components/schemas/temperatureUnit'
+            type: object
+          - properties:
+              humidityMin:
+                $ref: '#/components/schemas/humidityMin'
+            type: object
+          - properties:
+              humidityMax:
+                $ref: '#/components/schemas/humidityMax'
+            type: object
+          - properties:
+              ventilationMin:
+                $ref: '#/components/schemas/ventilationMin'
+            type: object
+          - properties:
+              ventilationMax:
+                $ref: '#/components/schemas/ventilationMax'
+            type: object
+          description: specifies the settings for an active reefer container used
+            to a shipment.
+          type: object
+      type: object
+      example: null
+    equipment_allOf:
+      properties:
+        ISOEquipmentCode:
+          description: Unique code for the different equipment size/type used for
+            transporting commodities. The code is a concatenation of ISO Equipment
+            Size Code and ISO Equipment Type Code A and follows the ISO 6346 standard.
+          maxLength: 4
+          type: string
+      type: object
+      example: null
+    equipment_allOf_1:
+      properties:
+        tareWeight:
+          description: The weight of an empty container (gross container weight).
+          example: 12000
+          type: number
+      type: object
+      example: null
+    equipment_allOf_2:
+      properties:
+        isShipperOwned:
+          description: Indicates whether the container is shipper owned (SOC).
+          example: true
+          type: boolean
+      type: object
+      example: null
+    seal_allOf:
+      properties:
+        sealNumber:
+          description: Identifies a seal affixed to the container.
+          maxLength: 15
+          type: string
+      type: object
+      example: null
+    seal_allOf_1:
+      properties:
+        sealSource:
+          $ref: '#/components/schemas/sealSource'
+      type: object
+      example: null
+    seal_allOf_2:
+      properties:
+        sealType:
+          $ref: '#/components/schemas/sealType'
+      type: object
+      example: null
+    documentParty_allOf:
+      properties:
+        party:
+          $ref: '#/components/schemas/partyNoID'
+      type: object
+      example: null
+    documentParty_allOf_1:
+      properties:
+        partyFunction:
+          $ref: '#/components/schemas/partyFunction'
+      type: object
+      example: null
+    documentParty_allOf_2:
+      properties:
+        displayedAddress:
+          items:
+            $ref: '#/components/schemas/addressLine'
+          type: array
+      type: object
+      example: null
+    documentParty_allOf_3:
+      properties:
+        partyContactDetails:
+          allOf:
+          - properties:
+              name:
+                $ref: '#/components/schemas/name'
+            type: object
+          - properties:
+              phone:
+                $ref: '#/components/schemas/phone'
+            type: object
+          - properties:
+              email:
+                $ref: '#/components/schemas/email'
+            type: object
+          type: object
+      type: object
+      example: null
+    documentParty_allOf_4:
+      properties:
+        isToBeNotified:
+          description: Used to decide whether the party will be notified of the arrival
+            of the cargo.
+          example: true
+          type: boolean
+      type: object
+      example: null
+    partyNoID_allOf:
+      properties:
+        partyName:
+          description: Name of the party.
+          example: Asseco Denmark
+          maxLength: 100
+          type: string
+      type: object
+      example: null
+    partyNoID_allOf_1:
+      properties:
+        taxReference1:
+          description: The identifying number of the consignee or shipper (Individual
+            or entity) used for tax purposes.
+          example: CVR-25645774
+          maxLength: 20
+          type: string
+      type: object
+      example: null
+    partyNoID_allOf_2:
+      properties:
+        taxReference2:
+          description: Optional second identifying number of the consignee or shipper
+            (Individual or entity) used for tax purposes.
+          example: CVR-25645774
+          maxLength: 20
+          type: string
+      type: object
+      example: null
+    partyNoID_allOf_3:
+      properties:
+        publicKey:
+          description: The public key used for a digital signature.
+          example: eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IkFzaW
+          maxLength: 500
+          type: string
+      type: object
+      example: null
+    partyNoID_allOf_4:
+      properties:
+        address:
+          allOf:
+          - $ref: '#/components/schemas/address'
+      type: object
+      example: null
+    partyNoID_allOf_5:
+      properties:
+        nmftaCode:
+          description: The Standard Carrier Alpha Code (SCAC) provided by NMFTA.
+          example: MMCU
+          maxLength: 4
+          type: string
+      type: object
+      example: null
+    shipmentLocation_allOf:
+      properties:
+        locationType:
+          $ref: '#/components/schemas/locationType'
+      type: object
+      example: null
+    shipmentLocationNoLocationType_allOf:
+      properties:
+        location:
+          allOf:
+          - $ref: '#/components/schemas/location'
+      type: object
+      example: null
+    shipmentLocationNoLocationType_allOf_1:
+      properties:
+        displayedName:
+          description: The address of the party to be displayed on the transport document.
+          maxLength: 250
+          type: string
+      type: object
+      example: null
+    reference_allOf:
+      properties:
+        referenceType:
+          $ref: '#/components/schemas/referenceType'
+      type: object
+      example: null
+    reference_allOf_1:
+      properties:
+        referenceValue:
+          description: The actual value of the reference.
+          maxLength: 100
+          type: string
+      type: object
+      example: null
+    transportDocumentHeader_allOf:
+      properties:
+        transportDocumentReference:
+          description: |
+            A unique number allocated by the shipping line to the transport document and the main number used for the tracking of the status of the shipment.
+          maxLength: 20
+          type: string
+      type: object
+      example: null
+    transportDocumentHeader_allOf_1:
+      properties:
+        placeOfIssue:
+          allOf:
+          - $ref: '#/components/schemas/location'
+          example:
+            UNLocationCode: USNYC
+      type: object
+      example: null
+    transportDocumentHeader_allOf_2:
+      properties:
+        issueDate:
+          description: Date when the transport document has been issued
+          example: 2020-12-12
+          format: date
+          type: string
+      type: object
+      example: null
+    transportDocumentHeader_allOf_3:
+      properties:
+        shippedOnBoardDate:
+          description: Date when the last container that is linked to the transport
+            document is physically loaded onboard the vessel indicated on the transport
+            document.
+          example: 2020-12-12
+          format: date
+          type: string
+      type: object
+      example: null
+    transportDocumentHeader_allOf_4:
+      properties:
+        receivedForShipmentDate:
+          description: Date when the last container linked to the transport document
+            is physically in the terminal (customers cleared against the intended
+            vessel).
+          example: 2020-12-12
+          format: date
+          type: string
+      type: object
+      example: null
+    transportDocumentHeader_allOf_5:
+      properties:
+        termsAndConditions:
+          description: Carrier general terms and conditions for this transport document.
+          type: string
+      type: object
+      example: null
+    transportDocumentHeader_allOf_6:
+      properties:
+        issuerCode:
+          description: |
+            The code used for identifying the specific issuer.
+          example: MMCU
+          maxLength: 4
+          type: string
+      type: object
+      example: null
+    transportDocumentHeader_allOf_7:
+      properties:
+        issuerCodeListProvider:
+          $ref: '#/components/schemas/issuerCodeListProvider'
+      type: object
+      example: null
+    transportDocumentHeader_allOf_8:
+      properties:
+        declaredValueCurrency:
+          description: "The currency used for the declared value, using the 3-character\
+            \ code defined by ISO 4217."
+          example: DKK
+          maxLength: 3
+          type: string
+      type: object
+      example: null
+    transportDocumentHeader_allOf_9:
+      properties:
+        declaredValue:
+          description: "The value of the cargo that the shipper declares to avoid\
+            \ the carrier&apos;s limitation of liability and \"Ad Valorem\" freight,\
+            \ i.e. freight which is calculated based on the value of the goods declared\
+            \ by the shipper."
+          example: 1231.1
+          type: number
+      type: object
+      example: null
+    transportDocumentHeader_allOf_10:
+      properties:
+        numberOfRiderPages:
+          description: The number of additional pages required to contain the goods
+            description on a transport document. Only applicable for physical transport
+            documents.
+          example: 2
+          type: integer
+      type: object
+      example: null
+    transportDocumentHeader_allOf_11:
+      properties:
+        cargoMovementTypeAtOrigin:
+          $ref: '#/components/schemas/cargoMovementTypeAtOrigin'
+      type: object
+      example: null
+    transportDocumentHeader_allOf_12:
+      properties:
+        cargoMovementTypeAtDestination:
+          $ref: '#/components/schemas/cargoMovementTypeAtDestination'
+      type: object
+      example: null
+    transportDocumentHeader_allOf_13:
+      properties:
+        receiptDeliveryTypeAtOrigin:
+          $ref: '#/components/schemas/receiptDeliveryTypeAtOrigin'
+      type: object
+      example: null
+    transportDocumentHeader_allOf_14:
+      properties:
+        receiptDeliveryTypeAtDestination:
+          $ref: '#/components/schemas/receiptDeliveryTypeAtDestination'
+      type: object
+      example: null
+    transportDocumentHeader_allOf_15:
+      properties:
+        serviceContractReference:
+          description: "Reference number for agreement between shipper and carrier\
+            \ through which the shipper commits to provide a certain minimum quantity\
+            \ of cargo over a fixed period, and the carrier commits to a certain rate\
+            \ or rate schedule."
+          maxLength: 30
+          type: string
+      type: object
+      example: null
+    transportDocument_allOf:
+      properties:
+        shippingInstruction:
+          allOf:
+          - $ref: '#/components/schemas/shippingInstruction'
+      type: object
+      example: null
+    charge_allOf:
+      properties:
+        chargeType:
+          description: Description of the charge type applied.
+          maxLength: 20
+          type: string
+      type: object
+      example: null
+    charge_allOf_1:
+      properties:
+        currencyAmount:
+          description: "The monetary value of all freight and other service charges\
+            \ for a transport document, with a maximum of 2-digit decimals."
+          example: 1012.12
+          type: number
+      type: object
+      example: null
+    charge_allOf_2:
+      properties:
+        currencyCode:
+          description: "The currency for the charge, using a 3-character code (ISO\
+            \ 4217)."
+          example: DKK
+          maxLength: 3
+          type: string
+      type: object
+      example: null
+    charge_allOf_3:
+      properties:
+        paymentTerm:
+          description: An indicator of whether a charge is prepaid or collect.
+          example: PREPAID
+          maxLength: 7
+          type: string
+      type: object
+      example: null
+    charge_allOf_4:
+      properties:
+        calculationBasis:
+          description: "The code specifying the measure unit used for the corresponding\
+            \ unit price for this cost, such as per day, per ton, per square metre."
+          example: Per day
+          maxLength: 50
+          type: string
+      type: object
+      example: null
+    charge_allOf_5:
+      properties:
+        unitPrice:
+          description: The unit price of this charge item in the currency of the charge.
+          example: 3456.6
+          type: number
+      type: object
+      example: null
+    charge_allOf_6:
+      properties:
+        quantity:
+          description: The amount of unit for this charge item.
+          example: 34.4
+          type: number
+      type: object
+      example: null
+    clause_allOf:
+      properties:
+        clauseContent:
+          description: The content of the clause.
+          type: string
+      type: object
+      example: null
+    transport_allOf:
+      properties:
+        loadLocation:
+          allOf:
+          - $ref: '#/components/schemas/location'
+          example:
+            UNLocationCode: NLRTM
+      type: object
+      example: null
+    transport_allOf_1:
+      properties:
+        dischargeLocation:
+          allOf:
+          - $ref: '#/components/schemas/location'
+          example:
+            UNLocationCode: DEDUS
+      type: object
+      example: null
+    transport_allOf_2:
+      properties:
+        plannedDepartureDate:
+          description: |
+            The planned date of departure.
+          format: $date
+          type: string
+      type: object
+      example: null
+    transport_allOf_3:
+      properties:
+        plannedArrivalDate:
+          description: |
+            The planned date of arrival.
+          format: $date
+          type: string
+      type: object
+      example: null
+    transport_allOf_4:
+      properties:
+        modeOfTransport:
+          $ref: '#/components/schemas/modeOfTransport'
+      type: object
+      example: null
+    transport_allOf_5:
+      properties:
+        vesselIMONumber:
+          description: |
+            The unique reference for a registered Vessel. The reference is the International Maritime Organisation (IMO) number, also sometimes known as the Lloyd&apos;s register code, which does not change during the lifetime of the vessel
+          example: "1801323"
+          maxLength: 7
+          type: string
+      type: object
+      example: null
+    transport_allOf_6:
+      properties:
+        carrierVoyageNumber:
+          description: The vessel operator-specific identifier of the Voyage.
+          example: 2103S
+          maxLength: 50
+          type: string
+      type: object
+      example: null
+    transport_allOf_7:
+      properties:
+        isUnderShippersResponsibility:
+          description: |
+            Indicator whether mode of transportation for pre-carriage (e.g. truck, barge, rail) is under shipper's responsibility
+          example: false
+          type: boolean
+      type: object
+      example: null
+    baseEvent_allOf:
+      properties:
+        eventID:
+          description: |
+            The unique identifier for the event (the message - not the source).
+
+            <b>NB</b>&#58; This field should be considered Metadata
+          example: 84db923d-2a19-4eb0-beb5-446c1ec57d34
+          format: uuid
+          type: string
+      type: object
+      example: null
+    baseEvent_allOf_1:
+      properties:
+        eventCreatedDateTime:
+          description: |
+            The timestamp of when the event was created.
+
+            <b>NB</b>&#58; This field should be considered Metadata
+          example: 2021-01-09T14:12:56+01:00
+          format: date-time
+          type: string
+      type: object
+      example: null
+    baseEventBody_allOf:
+      properties:
+        eventType:
+          allOf:
+          - $ref: '#/components/schemas/eventType'
+      type: object
+      example: null
+    baseEventBody_allOf_1:
+      properties:
+        eventClassifierCode:
+          description: |
+            Code for the event classifier. Values can vary depending on eventType
+          type: string
+      type: object
+      example: null
+    baseEventBody_allOf_2:
+      properties:
+        eventDateTime:
+          description: "The local date and time, where the event took place or when\
+            \ the event will take place, in ISO 8601 format."
+          example: 2019-11-12T07:41:00+08:30
+          format: date-time
+          type: string
+      type: object
+      example: null
+    baseShipmentEvent_allOf:
+      properties:
+        eventType:
+          enum:
+          - SHIPMENT
+          example: SHIPMENT
+          type: string
+      type: object
+      example: null
+    baseShipmentEvent_allOf_1:
+      properties:
+        eventDateTime:
+          description: |
+            Value for eventDateTime must be the same value as eventCreatedDateTime
+      type: object
+      example: null
+    baseShipmentEvent_allOf_2:
+      properties:
+        eventClassifierCode:
+          description: |
+            Code for the event classifier can be
+            - ACT (Actual)
+            - PLN (Planned)
+            - EST (Estimated)
+          enum:
+          - ACT
+          - PLN
+          - EST
+          example: ACT
+          type: string
+      type: object
+      example: null
+    baseShipmentEvent_allOf_3:
+      properties:
+        shipmentEventTypeCode:
+          $ref: '#/components/schemas/shipmentEventTypeCode'
+      type: object
+      example: null
+    baseShipmentEvent_allOf_4:
+      properties:
+        documentID:
+          description: |
+            The id of the object defined by the documentTypeCode.
+          type: string
+      type: object
+      example: null
+    baseShipmentEvent_allOf_5:
+      properties:
+        documentTypeCode:
+          $ref: '#/components/schemas/documentTypeCode'
+      type: object
+      example: null
+    baseShipmentEvent_allOf_6:
+      properties:
+        shipmentInformationTypeCode:
+          $ref: '#/components/schemas/shipmentInformationType'
+      type: object
+      example: null
+    baseShipmentEvent_allOf_7:
+      properties:
+        reason:
+          description: Reason field in a Shipment event. This field can be used to
+            explain why a specific event has been sent.
+          example: The following attributes are missing...
+          type: string
+      type: object
+      example: null
+    baseShipmentEvent_allOf_8:
+      properties:
+        eventTypeCode:
+          deprecated: true
+          description: |
+            Deprecated - Unique identifier for Event Type Code. This has been replaced by Specialized eventTypeCodes: shipmentEventTypeCode, transportEventTypeCode, equipmentEventTypeCode and opertaionsEventType
+          example: ARRI
+          maxLength: 4
+          type: string
+      type: object
+      example: null
+    baseShipmentEvent_allOf_9:
+      properties:
+        eventTypeCode:
+          deprecated: true
+          description: |
+            Unique identifier for Event Type Code. For shipment events this can be
+            - RECE (Received)
+            - CONF (Confirmed)
+            - ISSU (Issued)
+            - APPR (Approved)
+            - SUBM (Submitted)
+            - SURR (Surrendered)
+            - REJE (Rejected)
+            - PENA (Pending approval)
+
+            Deprecated - use shipmentEventTypeCode instead
+          enum:
+          - RECE
+          - CONF
+          - ISSU
+          - APPR
+          - SUBM
+          - SURR
+          - REJE
+          - PENA
+          example: RECE
+          type: string
+      type: object
+      example: null
+    baseShipmentEvent_allOf_10:
+      properties:
+        shipmentID:
+          description: The identifier for a shipment
+          example: d9c69bc8-294d-46d1-807c-654598341374
+          format: uuid
+          type: string
+      type: object
+      example: null
+    baseShipmentEvent_allOf_11:
+      properties:
+        shipmentID:
+          deprecated: true
+          description: |
+            ID uniquely identifying a shipment.
+
+            Deprecated - this is replaced by documentID which can contain different values depending on the value of the documentTypeCode field
+      type: object
+      example: null
