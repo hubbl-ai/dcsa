@@ -1,7 +1,16 @@
 /*
 DCSA OpenAPI specification for Electronic Bill of Lading
 
-API specification issued by DCSA.org.  For explanation to specific values or objects please refer to the <a href='https://dcsa.org/wp-content/uploads/2020/12/20201208-DCSA-P1-DCSA-Information-Model-v3.0-FINAL.pdf'>Information Model v3.0</a>  It is possible to use this API as a standalone API. In order to do so it is necessary to use the poll-endPoint - /v1/events  in order to poll event information.  It is recomended to implement the <a href='https://app.swaggerhub.com/apis/dcsaorg/DOCUMENTATION_EVENT_HUB'>DCSA Documentation Event Hub</a> in order to use the push model. Here events are pushed as they occur.
+API specification issued by DCSA.org.  For explanation to specific
+values or objects please refer to the
+[Information Model(https://dcsa.org/wp-content/uploads/2020/12/20201208-DCSA-P1-DCSA-Information-Model-v3.0-FINAL.pdf).
+It is possible to use this API as a standalone API. In
+order to do so it is necessary to use the poll-endPoint - /v1/events
+in order to poll event information.  It is recomended to implement the
+<a
+href='https://app.swaggerhub.com/apis/dcsaorg/DOCUMENTATION_EVENT_HUB'>DCSA
+Documentation Event Hub</a> in order to use the push model. Here
+events are pushed as they occur.
 
 API version: 1.0.0
 Contact: info@dcsa.org
@@ -18,14 +27,19 @@ import (
 
 // TransportDocument The document that governs the terms of carriage between shipper and carrier for maritime transportation. Two distinct types of transport documents exist: - Bill of Lading - Sea Waybill.
 type TransportDocument struct {
-	// A unique number allocated by the shipping line to the transport document and the main number used for the tracking of the status of the shipment.
+	// A unique number allocated by the shipping line to the
+	// transport document and the main number used for the
+	// tracking of the status of the shipment.
 	TransportDocumentReference string    `json:"transportDocumentReference"`
 	PlaceOfIssue               *Location `json:"placeOfIssue,omitempty"`
-	// Date when the transport document has been issued
-	IssueDate string `json:"issueDate"`
-	// Date when the last container that is linked to the transport document is physically loaded onboard the vessel indicated on the transport document.
+	IssueDate string `json:"issueDate"` 	// Date when the transport document has been issued
+	// Date when the last container that is linked to the
+	// transport document is physically loaded onboard the vessel
+	// indicated on the transport document.
 	ShippedOnBoardDate *string `json:"shippedOnBoardDate,omitempty"`
-	// Date when the last container linked to the transport document is physically in the terminal (customers cleared against the intended vessel).
+	// Date when the last container linked to the transport
+	// document is physically in the terminal (customers cleared
+	// against the intended vessel).
 	ReceivedForShipmentDate *string `json:"receivedForShipmentDate,omitempty"`
 	// Carrier general terms and conditions for this transport document.
 	TermsAndConditions string `json:"termsAndConditions"`
@@ -34,15 +48,24 @@ type TransportDocument struct {
 	IssuerCodeListProvider *IssuerCodeListProvider `json:"issuerCodeListProvider,omitempty"`
 	// The currency used for the declared value, using the 3-character code defined by ISO 4217.
 	DeclaredValueCurrency *string `json:"declaredValueCurrency,omitempty"`
-	// The value of the cargo that the shipper declares to avoid the carrier&apos;s limitation of liability and \"Ad Valorem\" freight, i.e. freight which is calculated based on the value of the goods declared by the shipper.
+
+	// The value of the cargo that the shipper declares to avoid
+	// the carrier's limitation of liability and "Ad Valorem"
+	// freight, i.e. freight which is calculated based on the
+	// value of the goods declared by the shipper.
 	DeclaredValue *float32 `json:"declaredValue,omitempty"`
-	// The number of additional pages required to contain the goods description on a transport document. Only applicable for physical transport documents.
+	// The number of additional pages required to contain the
+	// goods description on a transport document. Only applicable
+	// for physical transport documents.
 	NumberOfRiderPages               *int32                   `json:"numberOfRiderPages,omitempty"`
 	CargoMovementTypeAtOrigin        common.CargoMovementType `json:"cargoMovementTypeAtOrigin"`
 	CargoMovementTypeAtDestination   common.CargoMovementType `json:"cargoMovementTypeAtDestination"`
 	ReceiptDeliveryTypeAtOrigin      ReceiptDeliveryType      `json:"receiptDeliveryTypeAtOrigin"`
 	ReceiptDeliveryTypeAtDestination ReceiptDeliveryType      `json:"receiptDeliveryTypeAtDestination"`
-	// Reference number for agreement between shipper and carrier through which the shipper commits to provide a certain minimum quantity of cargo over a fixed period, and the carrier commits to a certain rate or rate schedule.
+	// Reference number for agreement between shipper and carrier
+	// through which the shipper commits to provide a certain
+	// minimum quantity of cargo over a fixed period, and the
+	// carrier commits to a certain rate or rate schedule.
 	ServiceContractReference *string             `json:"serviceContractReference,omitempty"`
 	ShippingInstruction      ShippingInstruction `json:"shippingInstruction"`
 	Charges                  []Charge            `json:"charges,omitempty"`
@@ -54,7 +77,16 @@ type TransportDocument struct {
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewTransportDocument(transportDocumentReference string, issueDate string, termsAndConditions string, cargoMovementTypeAtOrigin common.CargoMovementType, cargoMovementTypeAtDestination common.CargoMovementType, receiptDeliveryTypeAtOrigin ReceiptDeliveryType, receiptDeliveryTypeAtDestination ReceiptDeliveryType, shippingInstruction ShippingInstruction, transports []Transport) *TransportDocument {
+func NewTransportDocument(transportDocumentReference string,
+	issueDate string,
+	termsAndConditions string,
+	cargoMovementTypeAtOrigin common.CargoMovementType,
+	cargoMovementTypeAtDestination common.CargoMovementType,
+	receiptDeliveryTypeAtOrigin ReceiptDeliveryType,
+	receiptDeliveryTypeAtDestination ReceiptDeliveryType,
+	shippingInstruction ShippingInstruction,
+	transports []Transport,
+) *TransportDocument {
 	this := TransportDocument{}
 	this.TransportDocumentReference = transportDocumentReference
 	this.IssueDate = issueDate

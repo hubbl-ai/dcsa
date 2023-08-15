@@ -17,25 +17,40 @@ import (
 	"github.com/hubbl-ai/dcsa/common"
 )
 
-// ShippingInstruction The Shipping Instruction is an enrichment to the original booking shared by the shipper to the carrier. The shipping instruction includes volume or weight, cargo items, shipping dates, origin, destination, and other special instructions. The information given by the shipper through the shipping instruction is the information required to create a Transport Document.
+// ShippingInstruction The Shipping Instruction is an enrichment to
+// the original booking shared by the shipper to the carrier. The
+// shipping instruction includes volume or weight, cargo items,
+// shipping dates, origin, destination, and other special
+// instructions. The information given by the shipper through the
+// shipping instruction is the information required to create a
+// Transport Document.
 type ShippingInstruction struct {
-	// The identifier for a shipping instruction provided by the carrier for system purposes.
+	// The identifier for a shipping instruction provided by the
+	// carrier for system purposes.
 	ShippingInstructionID string                       `json:"shippingInstructionID"`
 	TransportDocumentType common.TransportDocumentType `json:"transportDocumentType"`
-	// Specifies whether the Transport document is a received for shipment, or shipped onboard.
+	// Specifies whether the Transport document is a received for
+	// shipment, or shipped onboard.
 	IsShippedOnboardType bool `json:"isShippedOnboardType"`
-	// The requested number of copies of the Transport document to be issued by the carrier. Only applicable for physical documents
+	// The requested number of copies of the Transport document to
+	// be issued by the carrier. Only applicable for physical
+	// documents
 	NumberOfCopies *int32 `json:"numberOfCopies,omitempty"`
-	// Number of original copies of the negotiable bill of lading that has been issued to the customer.
+	// Number of original copies of the negotiable bill of lading
+	// that has been issued to the customer.
 	NumberOfOriginals                      *int32                                  `json:"numberOfOriginals,omitempty"`
 	PreCarriageUnderShippersResponsibility *PreCarriageUnderShippersResponsibility `json:"preCarriageUnderShippersResponsibility,omitempty"`
-	// A location object - here with an example with only UN location code and City name present
+	// A location object - here with an example with only UN
+	// location code and City name present
 	InvoicePayableAt interface{} `json:"invoicePayableAt"`
-	// An indicator whether the transport document is electronically transferred.
+	// An indicator whether the transport document is
+	// electronically transferred.
 	IsElectronic bool `json:"isElectronic"`
 	// An indicator whether the transport document should include charges.
 	IsChargesDisplayed *bool `json:"isChargesDisplayed,omitempty"`
-	// The associated booking number provided by the carrier. Cannot be used in combination with Cargo Item level carrierBookingReference
+	// The associated booking number provided by the
+	// carrier. Cannot be used in combination with Cargo Item
+	// level carrierBookingReference
 	CarrierBookingReference     interface{}                  `json:"carrierBookingReference,omitempty"`
 	CargoItems                  []CargoItem                  `json:"cargoItems,omitempty"`
 	UtilizedTransportEquipments []UtilizedTransportEquipment `json:"utilizedTransportEquipments,omitempty"`
@@ -58,9 +73,10 @@ func NewShippingInstruction(shippingInstructionID string, transportDocumentType 
 	return &this
 }
 
-// NewShippingInstructionWithDefaults instantiates a new ShippingInstruction object
-// This constructor will only assign default values to properties that have it defined,
-// but it doesn't guarantee that properties required by API are set
+// NewShippingInstructionWithDefaults instantiates a new
+// ShippingInstruction object This constructor will only assign
+// default values to properties that have it defined, but it doesn't
+// guarantee that properties required by API are set
 func NewShippingInstructionWithDefaults() *ShippingInstruction {
 	this := ShippingInstruction{}
 	return &this
@@ -76,8 +92,9 @@ func (o *ShippingInstruction) GetShippingInstructionID() string {
 	return o.ShippingInstructionID
 }
 
-// GetShippingInstructionIDOk returns a tuple with the ShippingInstructionID field value
-// and a boolean to check if the value has been set.
+// GetShippingInstructionIDOk returns a tuple with the
+// ShippingInstructionID field value and a boolean to check if the
+// value has been set.
 func (o *ShippingInstruction) GetShippingInstructionIDOk() (*string, bool) {
 	if o == nil {
 		return nil, false
@@ -90,7 +107,8 @@ func (o *ShippingInstruction) SetShippingInstructionID(v string) {
 	o.ShippingInstructionID = v
 }
 
-// GetTransportDocumentType returns the TransportDocumentType field value
+// GetTransportDocumentType returns the TransportDocumentType field
+// value
 func (o *ShippingInstruction) GetTransportDocumentType() common.TransportDocumentType {
 	if o == nil {
 		var ret common.TransportDocumentType
@@ -100,8 +118,9 @@ func (o *ShippingInstruction) GetTransportDocumentType() common.TransportDocumen
 	return o.TransportDocumentType
 }
 
-// GetTransportDocumentTypeOk returns a tuple with the TransportDocumentType field value
-// and a boolean to check if the value has been set.
+// GetTransportDocumentTypeOk returns a tuple with the
+// TransportDocumentType field value and a boolean to check if the
+// value has been set.
 func (o *ShippingInstruction) GetTransportDocumentTypeOk() (*common.TransportDocumentType, bool) {
 	if o == nil {
 		return nil, false
